@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: php-mysql
+  namespace: preprod
+  labels:
+    app: php-mysql
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: php-mysql
+  template:
+    metadata:
+      labels:
+        app: php-mysql
+    spec:
+      containers:
+        - name: php-mysql
+          image: mysql:5.7
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              value: root
+            - name: MYSQL_DATABASE
+              value: db_alumni
+            - name: MYSQL_USER
+              value: alumni_user
+            - name: MYSQL_PASSWORD
+              value: alumni_pass
+          ports:
+            - containerPort: 3306
+          volumeMounts:
+            - name: mysql-data
+              mountPath: /var/lib/mysql
+            - name: db-init
+              mountPath: /docker-entrypoint-initdb.d
+          resources:
+            requests:
+              cpu: "200m"
+              memory: "256Mi"
+            limits:
+              cpu: "600m"
+              memory: "512Mi"
+      volumes:
+        - name: mysql-data
+          persistentVolumeClaim:
+            claimName: mysql-pvc
+        - name: db-init
+          configMap:
+            name: db-init-sql
